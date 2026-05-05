@@ -1,0 +1,14 @@
+# Entorno y secretos
+backend/.env
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/kno_tic.db
+
+# Dependencias frontend
+frontend/node_modules/
+frontend/dist/
+
+# Sistema
+.DS_Store
+Thumbs.db

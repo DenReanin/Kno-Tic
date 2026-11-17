@@ -1,19 +1,33 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Query
+from pathlib import Path
+
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from analyzer import analyze_message, analyze_image_content, analyze_url, learn_indicator
-from db import init_db, save_analysis, get_history, get_stats, save_feedback
+
+from analyzer import analyze_image_content, analyze_message, analyze_url, learn_indicator
+from db import get_history, get_stats, init_db, save_analysis, save_feedback
 
 app = FastAPI(title="Kno-Tic API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 init_db()
+
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+if (FRONTEND_DIST / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
 
 
 class MessageRequest(BaseModel):
@@ -34,8 +48,25 @@ class LearnRequest(BaseModel):
     summary: str
 
 
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "app": "Kno-Tic"}
+
+
+@app.get("/favicon.svg")
+def favicon():
+    icon_path = FRONTEND_DIST / "favicon.svg"
+    if icon_path.is_file():
+        return FileResponse(icon_path)
+    raise HTTPException(status_code=404, detail="Favicon not found")
+
+
 @app.get("/")
-def root():
+def root(request: Request):
+    accept = request.headers.get("accept", "")
+    index_file = FRONTEND_DIST / "index.html"
+    if "text/html" in accept and index_file.is_file():
+        return FileResponse(index_file)
     return {"status": "ok", "app": "Kno-Tic"}
 
 
@@ -60,6 +91,10 @@ async def analyze_img(file: UploadFile = File(...)):
         result = await analyze_image_content(contents, file.content_type)
         analysis_id = save_analysis(f"[Imagen: {file.filename}]", result)
         return {**result, "analysis_id": analysis_id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -72,6 +107,8 @@ async def analyze_url_endpoint(request: UrlRequest):
         result = await analyze_url(request.url)
         analysis_id = save_analysis(request.url, result)
         return {**result, "analysis_id": analysis_id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

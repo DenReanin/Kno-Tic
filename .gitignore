@@ -1,8 +1,11 @@
 # Entorno y secretos
 backend/.env
 backend/venv/
+.venv/
 backend/__pycache__/
+__pycache__/
 backend/*.pyc
+*.pyc
 backend/kno_tic.db
 
 # Dependencias frontend

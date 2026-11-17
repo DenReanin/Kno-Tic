@@ -1,8 +1,10 @@
-import sqlite3
 import json
+import os
+import sqlite3
 from datetime import datetime
+from pathlib import Path
 
-DB_PATH = "kno_tic.db"
+DB_PATH = os.getenv("KNOTIC_DB_PATH") or str(Path(__file__).resolve().parent / "kno_tic.db")
 
 
 def init_db():
@@ -90,7 +92,7 @@ def get_stats() -> dict:
     total = conn.execute("SELECT COUNT(*) FROM analyses").fetchone()[0]
     if total == 0:
         conn.close()
-        return {"total": 0, "phishing_percent": 0, "top_tactic": None}
+        return {"total": 0, "phishing_percent": 0, "top_tactic": None, "by_category": {}}
 
     threat_count = conn.execute(
         "SELECT COUNT(*) FROM analyses WHERE risk_score >= 60"

@@ -1,0 +1,23 @@
+{
+  "id": "kno-tic",
+  "name": "Kno-Tic",
+  "abbr": "KT",
+  "tagline": "Detector de phishing, smishing e ingeniería social con Gemini/Groq, motor offline y protección anti-SSRF",
+  "category": "Ciberseguridad",
+  "brandColor": "#0EA5E9",
+  "icon": "shield-check",
+  "repo": "DenReanin/Kno-Tic",
+  "branch": "main",
+  "private": false,
+  "updateStrategy": {
+    "mode": "branch-tarball",
+    "postInstall": "bash ./run-knotic.sh --setup-only",
+    "requireMainCheckSuccess": false
+  },
+  "launch": {
+    "executable": "run-knotic.sh",
+    "args": [],
+    "workingDir": "bin",
+    "runInTerminal": false
+  }
+}

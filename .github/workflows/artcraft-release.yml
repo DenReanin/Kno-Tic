@@ -1,0 +1,44 @@
+name: ArtCraft Release (Kno-Tic)
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar backend, ejecutar tests y compilar frontend
+        run: |
+          pip install -r backend/requirements.txt httpx
+          cd frontend && npm ci && npm run build && cd ..
+          python probar_knotic.py
+
+      - name: Empaquetar para ArtCraft Hub
+        run: |
+          tar --exclude='.git' --exclude='.venv' --exclude='frontend/node_modules' --exclude='__pycache__' \
+            -czf kno-tic-linux-x86_64.tar.gz .
+          sha256sum kno-tic-linux-x86_64.tar.gz > kno-tic-linux-x86_64.tar.gz.sha256
+
+      - name: Publicar GitHub Release automática desde main
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v1.0.${{ github.run_number }}"
+          name: "Kno-Tic v1.0.${{ github.run_number }} (${{ github.sha }})"
+          generate_release_notes: true
+          files: |
+            kno-tic-linux-x86_64.tar.gz
+            kno-tic-linux-x86_64.tar.gz.sha256

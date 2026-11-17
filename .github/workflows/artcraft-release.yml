@@ -30,7 +30,8 @@ jobs:
       - name: Empaquetar para ArtCraft Hub
         run: |
           tar --exclude='.git' --exclude='.venv' --exclude='frontend/node_modules' --exclude='__pycache__' \
-            -czf kno-tic-linux-x86_64.tar.gz .
+            -czf /tmp/kno-tic-linux-x86_64.tar.gz .
+          mv /tmp/kno-tic-linux-x86_64.tar.gz ./kno-tic-linux-x86_64.tar.gz
           sha256sum kno-tic-linux-x86_64.tar.gz > kno-tic-linux-x86_64.tar.gz.sha256
 
       - name: Publicar GitHub Release automática desde main
